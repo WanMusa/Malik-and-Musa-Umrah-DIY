@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight + Hotel Booking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .flight-segment {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .flight-results, .hotel-results {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .flight-option, .hotel-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flight-option:hover, .hotel-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .flight-option.selected, .hotel-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .price {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .calendar-day {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: #f0f4ff;
+        }
+
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-day.price-hint::after {
+            content: attr(data-price);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 10px;
+            color: #667eea;
+        }
+
+        .hotel-booking {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .summary-section {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #48bb78;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flight + Hotel Booking System</h1>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span>Flights</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span>Hotels</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <span>Summary</span>
+            </div>
+        </div>
+
+        <!-- Flight Selection Section -->
+        <div class="card" id="flight-section">
+            <h2>Select Your Flights</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Passengers</label>
+                    <select id="passengers">
+                        <option value="1">1 Adult</option>
+                        <option value="2">2 Adults</option>
+                        <option value="3">3 Adults</option>
+                        <option value="4">4 Adults</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Infants (0-2 years)</label>
+                    <select id="infants">
+                        <option value="0">0 Infants</option>
+                        <option value="1">1 Infant</option>
+                        <option value="2">2 Infants</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Children (2-8 years)</label>
+                    <select id="children">
+                        <option value="0">0 Children</option>
+                        <option value="1">1 Child</option>
+                        <option value="2">2 Children</option>
+                        <option value="3">3 Children</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Youth (8-18 years)</label>
+                    <select id="youth">
+                        <option value="0">0 Youth</option>
+                        <option value="1">1 Youth</option>
+                        <option value="2">2 Youth</option>
+                        <option value="3">3 Youth</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="flight-segments">
+                <!-- Flight Segment 1: Outbound -->
+                <div class="flight-segment">
+                    <h4>Outbound Flight</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>From</label>
+                            <select class="origin">
+                                <option value="">Select Origin</option>
+                                <option value="AKL">Auckland (AKL)</option>
+                                <option value="SYD">Sydney (SYD)</option>
+                                <option value="MEL">Melbourne (MEL)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>To</label>
+                            <select class="destination">
+                                <option value="">Select Destination</option>
+                                <option value="JED">Jeddah (JED)</option>
+                                <option value="MED">Medina (MED)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Departure Date</label>
+                            <input type="date" class="departure-date">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Segment 2: Return -->
+                <div class="flight-segment">
+                    <h4>Return Flight</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>From</label>
+                            <select class="origin">
+                                <option value="">Select Origin</option>
+                                <option value="JED">Jeddah (JED)</option>
+                                <option value="MED">Medina (MED)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>To</label>
+                            <select class="destination">
+                                <option value="">Select Destination</option>
+                                <option value="AKL">Auckland (AKL)</option>
+                                <option value="SYD">Sydney (SYD)</option>
+                                <option value="MEL">Melbourne (MEL)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Departure Date</label>
+                            <input type="date" class="departure-date">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="search-flights">Search Flights</button>
+
+            <div id="flight-results" class="flight-results hidden"></div>
+        </div>
+
+        <!-- Hotel Selection Section -->
+        <div class="card hidden" id="hotel-section">
+            <h2>Select Your Hotels</h2>
+            <p style="margin-bottom: 20px; color: #666;">Add hotel bookings for your trip. You can book up to 4 different locations.</p>
+            
+            <div id="hotel-bookings"></div>
+            
+            <button id="add-hotel-booking" class="btn-secondary">Add Hotel Booking</button>
+            <button id="proceed-to-summary" class="hidden">Proceed to Summary</button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="card hidden" id="summary-section">
+            <h2>Booking Summary</h2>
+            
+            <div class="summary-section">
+                <h3>Flight Details</h3>
+                <div id="flight-summary"></div>
+            </div>
+
+            <div class="summary-section">
+                <h3>Hotel Details</h3>
+                <div id="hotel-summary"></div>
+            </div>
+
+            <div class="summary-section">
+                <h3>Total Cost</h3>
+                <div id="total-cost" class="price"></div>
+            </div>
+
+            <button id="purchase-now" style="width: 100%; font-size: 18px; padding: 15px;">Purchase Now</button>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registration-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Register Your Interest</h2>
+            <p style="margin-bottom: 20px;">We'll contact you soon to complete your booking!</p>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email-input" placeholder="Enter your email address">
+            </div>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="name-input" placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone-input" placeholder="Enter your phone number">
+            </div>
+
+            <button id="submit-interest" style="width: 100%; margin-top: 20px;">Register Interest</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample flight data
+        const flightData = [
+            {
+                id: 'f1',
+                from: 'AKL',
+                to: 'JED',
+                airline: 'Emirates',
+                departure: '10:30',
+                arrival: '06:45+1',
+                duration: '17h 15m',
+                stops: '1 stop',
+                price: 1850
+            },
+            {
+                id: 'f2',
+                from: 'AKL',
+                to: 'JED',
+                airline: 'Qatar Airways',
+                departure: '14:20',
+                arrival: '10:15+1',
+                duration: '16h 55m',
+                stops: '1 stop',
+                price: 1920
+            },
+            {
+                id: 'f3',
+                from: 'JED',
+                to: 'AKL',
+                airline: 'Emirates',
+                departure: '08:15',
+                arrival: '09:30+1',
+                duration: '18h 15m',
+                stops: '1 stop',
+                price: 1850
+            },
+            {
+                id: 'f4',
+                from: 'MED',
+                to: 'AKL',
+                airline: 'Saudi Airlines',
+                departure: '11:45',
+                arrival: '12:20+1',
+                duration: '17h 35m',
+                stops: '1 stop',
+                price: 1780
+            }
+        ];
+
+        // Sample hotel data
+        const hotelData = [
+            {
+                id: 'h1',
+                name: 'Fairmont Makkah Clock Royal Tower',
+                location: 'Mecca',
+                rating: 5,
+                price: 450,
+                image: 'https://via.placeholder.com/300x200?text=Fairmont+Makkah'
+            },
+            {
+                id: 'h2',
+                name: 'Hilton Suites Makkah',
+                location: 'Mecca',
+                rating: 4,
+                price: 320,
+                image: 'https://via.placeholder.com/300x200?text=Hilton+Makkah'
+            },
+            {
+                id: 'h3',
+                name: 'Hyatt Regency Makkah',
+                location: 'Mecca',
+                rating: 5,
+                price: 380,
+                image: 'https://via.placeholder.com/300x200?text=Hyatt+Makkah'
+            },
+            {
+                id: 'h4',
+                name: 'Movenpick Hotel & Residences Hajar Tower',
+                location: 'Medina',
+                rating: 5,
+                price: 280,
+                image: 'https://via.placeholder.com/300x200?text=Movenpick+Medina'
+            },
+            {
+                id: 'h5',
+                name: 'Pullman Zamzam Madina',
+                location: 'Medina',
+                rating: 5,
+                price: 320,
+                image: 'https://via.placeholder.com/300x200?text=Pullman+Medina'
+            },
+            {
+                id: 'h6',
+                name: 'InterContinental Dar Al Tawhid',
+                location: 'Medina',
+                rating: 4,
+                price: 240,
+                image: 'https://via.placeholder.com/300x200?text=InterContinental+Medina'
+            },
+            {
+                id: 'h7',
+                name: 'Rosewood Jeddah',
+                location: 'Jeddah',
+                rating: 5,
+                price: 350,
+                image: 'https://via.placeholder.com/300x200?text=Rosewood+Jeddah'
+            },
+            {
+                id: 'h8',
+                name: 'Park Hyatt Jeddah',
+                location: 'Jeddah',
+                rating: 5,
+                price: 320,
+                image: 'https://via.placeholder.com/300x200?text=Park+Hyatt+Jeddah'
+            }
+        ];
+
+        let selectedFlights = [];
+        let selectedHotels = [];
+        let flightDateRange = { start: null, end: null };
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Setting up event listeners');
+            
+            const searchButton = document.getElementById('search-flights');
+            console.log('Search button found:', !!searchButton);
+            
+            if (searchButton) {
+                searchButton.addEventListener('click', function() {
+                    console.log('Search button clicked!');
+                    searchFlights();
+                });
+            } else {
+                console.error('Search flights button not found!');
+            }
+            
+            const addHotelButton = document.getElementById('add-hotel-booking');
+            if (addHotelButton) {
+                addHotelButton.addEventListener('click', addHotelBooking);
+            }
+            
+            const proceedButton = document.getElementById('proceed-to-summary');
+            if (proceedButton) {
+                proceedButton.addEventListener('click', showSummary);
+            }
+            
+            const purchaseButton = document.getElementById('purchase-now');
+            if (purchaseButton) {
+                purchaseButton.addEventListener('click', showRegistrationModal);
+            }
+        });
+
+        // Modal events
+        const modal = document.getElementById('registration-modal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        closeBtn.addEventListener('click', () => modal.style.display = 'none');
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        document.getElementById('submit-interest').addEventListener('click', submitInterest);
+
+        function searchFlights() {
+            console.log('=== SEARCH FLIGHTS DEBUG ===');
+            console.log('Search flights clicked');
+            
+            const segments = document.querySelectorAll('.flight-segment');
+            console.log('Found segments:', segments.length);
+            
+            if (segments.length === 0) {
+                console.error('No flight segments found!');
+                return;
+            }
+
+            let isValid = true;
+            let dates = [];
+
+            segments.forEach((segment, index) => {
+                console.log(`Processing segment ${index + 1}:`);
+                
+                const originSelect = segment.querySelector('.origin');
+                const destSelect = segment.querySelector('.destination');
+                const dateInput = segment.querySelector('.departure-date');
+                
+                console.log('Elements found:', {
+                    originSelect: !!originSelect,
+                    destSelect: !!destSelect,
+                    dateInput: !!dateInput
+                });
+
+                if (!originSelect || !destSelect || !dateInput) {
+                    console.error(`Missing form elements in segment ${index + 1}`);
+                    isValid = false;
+                    return;
+                }
+
+                const origin = originSelect.value;
+                const dest = destSelect.value;
+                const depDate = dateInput.value;
+
+                console.log(`Segment ${index + 1} values:`, { origin, dest, depDate });
+
+                if (!origin || !dest || !depDate) {
+                    isValid = false;
+                    console.log(`Segment ${index + 1} is invalid - missing values`);
+                }
+
+                if (depDate) {
+                    dates.push(new Date(depDate));
+                    console.log('Added date:', depDate);
+                }
+            });
+
+            console.log('Validation result:', { isValid, datesCount: dates.length });
+
+            if (!isValid) {
+                alert('Please fill in all required flight details (Origin, Destination, and Departure Date) for both flights');
+                return;
+            }
+
+            if (dates.length === 0) {
+                alert('Please select departure dates for both flights');
+                return;
+            }
+
+            // Set flight date range
+            flightDateRange.start = new Date(Math.min(...dates));
+            flightDateRange.end = new Date(Math.max(...dates));
+
+            console.log('Flight date range set:', flightDateRange);
+            console.log('Calling displayFlightResults...');
+
+            displayFlightResults();
+            console.log('=== END SEARCH FLIGHTS DEBUG ===');
+        }
+
+        function displayFlightResults() {
+            console.log('Displaying flight results');
+            const resultsContainer = document.getElementById('flight-results');
+            resultsContainer.innerHTML = '<h3>Available Flights</h3>';
+            
+            flightData.forEach(flight => {
+                const flightElement = document.createElement('div');
+                flightElement.className = 'flight-option';
+                flightElement.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4>${flight.airline}</h4>
+                            <p>${flight.from} → ${flight.to}</p>
+                            <p>${flight.departure} - ${flight.arrival}</p>
+                            <p>${flight.duration} • ${flight.stops}</p>
+                        </div>
+                        <div class="price">${flight.price}</div>
+                    </div>
+                `;
+                
+                flightElement.addEventListener('click', () => {
+                    console.log('Flight selected:', flight);
+                    document.querySelectorAll('.flight-option').forEach(el => el.classList.remove('selected'));
+                    flightElement.classList.add('selected');
+                    
+                    selectedFlights = [flight];
+                    
+                    // Show hotel section
+                    document.getElementById('hotel-section').classList.remove('hidden');
+                    updateStepIndicator(2);
+                    
+                    // Scroll to hotel section
+                    document.getElementById('hotel-section').scrollIntoView({ behavior: 'smooth' });
+                });
+                
+                resultsContainer.appendChild(flightElement);
+            });
+            
+            resultsContainer.classList.remove('hidden');
+            console.log('Flight results displayed');
+        }
+
+        function addHotelBooking() {
+            const bookingsContainer = document.getElementById('hotel-bookings');
+            const bookingCount = bookingsContainer.children.length;
+            
+            if (bookingCount < 4) {
+                const bookingElement = document.createElement('div');
+                bookingElement.className = 'hotel-booking';
+                bookingElement.innerHTML = `
+                    <h4>Hotel Booking ${bookingCount + 1}</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Location</label>
+                            <select class="hotel-location">
+                                <option value="">Select Location</option>
+                                <option value="Jeddah">Jeddah</option>
+                                <option value="Mecca">Mecca</option>
+                                <option value="Medina">Medina</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Check-in Date</label>
+                            <input type="date" class="checkin-date" min="${flightDateRange.start?.toISOString().split('T')[0]}" max="${flightDateRange.end?.toISOString().split('T')[0]}">
+                        </div>
+                        <div class="form-group">
+                            <label>Check-out Date</label>
+                            <input type="date" class="checkout-date" min="${flightDateRange.start?.toISOString().split('T')[0]}" max="${flightDateRange.end?.toISOString().split('T')[0]}">
+                        </div>
+                        ${bookingCount > 0 ? '<div class="form-group"><button type="button" class="btn-secondary remove-hotel">Remove</button></div>' : ''}
+                    </div>
+                    <div class="hotel-results"></div>
+                `;
+                
+                bookingsContainer.appendChild(bookingElement);
+                
+                // Add event listeners
+                const locationSelect = bookingElement.querySelector('.hotel-location');
+                locationSelect.addEventListener('change', () => showHotelOptions(bookingElement));
+                
+                if (bookingElement.querySelector('.remove-hotel')) {
+                    bookingElement.querySelector('.remove-hotel').addEventListener('click', () => {
+                        bookingElement.remove();
+                        updateProceedButton();
+                    });
+                }
+                
+                updateProceedButton();
+            }
+        }
+
+        function showHotelOptions(bookingElement) {
+            const location = bookingElement.querySelector('.hotel-location').value;
+            const resultsContainer = bookingElement.querySelector('.hotel-results');
+            
+            if (!location) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+            
+            const locationHotels = hotelData.filter(hotel => hotel.location === location);
+            resultsContainer.innerHTML = '<h5>Available Hotels</h5>';
+            
+            locationHotels.forEach(hotel => {
+                const hotelElement = document.createElement('div');
+                hotelElement.className = 'hotel-option';
+                hotelElement.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4>${hotel.name}</h4>
+                            <p>${'★'.repeat(hotel.rating)} ${hotel.rating} stars</p>
+                            <p>${hotel.location}</p>
+                        </div>
+                        <div class="price">$${hotel.price}/night</div>
+                    </div>
+                `;
+                
+                hotelElement.addEventListener('click', () => {
+                    bookingElement.querySelectorAll('.hotel-option').forEach(el => el.classList.remove('selected'));
+                    hotelElement.classList.add('selected');
+                    
+                    // Store selection
+                    bookingElement.selectedHotel = hotel;
+                    updateProceedButton();
+                });
+                
+                resultsContainer.appendChild(hotelElement);
+            });
+        }
+
+        function updateProceedButton() {
+            const bookings = document.querySelectorAll('.hotel-booking');
+            let hasSelection = false;
+            
+            bookings.forEach(booking => {
+                if (booking.selectedHotel && 
+                    booking.querySelector('.checkin-date').value && 
+                    booking.querySelector('.checkout-date').value) {
+                    hasSelection = true;
+                }
+            });
+            
+            const proceedBtn = document.getElementById('proceed-to-summary');
+            if (hasSelection) {
+                proceedBtn.classList.remove('hidden');
+            } else {
+                proceedBtn.classList.add('hidden');
+            }
+        }
+
+        function showSummary() {
+            // Collect hotel selections
+            selectedHotels = [];
+            const bookings = document.querySelectorAll('.hotel-booking');
+            
+            bookings.forEach(booking => {
+                if (booking.selectedHotel) {
+                    const checkinDate = booking.querySelector('.checkin-date').value;
+                    const checkoutDate = booking.querySelector('.checkout-date').value;
+                    
+                    if (checkinDate && checkoutDate) {
+                        const nights = Math.ceil((new Date(checkoutDate) - new Date(checkinDate)) / (1000 * 60 * 60 * 24));
+                        selectedHotels.push({
+                            ...booking.selectedHotel,
+                            checkin: checkinDate,
+                            checkout: checkoutDate,
+                            nights: nights,
+                            totalPrice: booking.selectedHotel.price * nights
+                        });
+                    }
+                }
+            });
+            
+            displaySummary();
+            document.getElementById('summary-section').classList.remove('hidden');
+            updateStepIndicator(3);
+        }
+
+        function displaySummary() {
+            // Flight summary
+            const flightSummary = document.getElementById('flight-summary');
+            let flightTotal = 0;
+            
+            flightSummary.innerHTML = selectedFlights.map(flight => {
+                flightTotal += flight.price;
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <strong>${flight.airline}</strong> - ${flight.from} → ${flight.to}<br>
+                        ${flight.departure} - ${flight.arrival} (${flight.duration})<br>
+                        <span class="price">$${flight.price}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // Hotel summary
+            const hotelSummary = document.getElementById('hotel-summary');
+            let hotelTotal = 0;
+            
+            hotelSummary.innerHTML = selectedHotels.map(hotel => {
+                hotelTotal += hotel.totalPrice;
+                return `
+                    <div style="margin-bottom: 15px;">
+                        <strong>${hotel.name}</strong> - ${hotel.location}<br>
+                        ${hotel.checkin} to ${hotel.checkout} (${hotel.nights} nights
